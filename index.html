@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], input[type="date"] {
+            width: 60%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 10px;
+            background-color: #f8f9fa;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        ul li.completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+        .date {
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Tarefas</h1>
+    <div class="container">
+        <input type="text" id="new-task" placeholder="Nova tarefa...">
+        <input type="date" id="due-date">
+        <button onclick="addTask()">Adicionar</button>
+        <ul id="task-list"></ul>
+    </div>
+
+    <script>
+        // Função para carregar as tarefas salvas no Local Storage
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.forEach(task => {
+                addTaskToDOM(task.text, task.completed, task.dueDate);
+            });
+        }
+
+        // Função para adicionar uma tarefa
+        function addTask() {
+            const taskText = document.getElementById('new-task').value;
+            const dueDate = document.getElementById('due-date').value;
+
+            if (taskText === '') return;
+            addTaskToDOM(taskText, false, dueDate);
+
+            // Salvar no Local Storage
+            saveTask(taskText, false, dueDate);
+
+            document.getElementById('new-task').value = '';
+            document.getElementById('due-date').value = '';
+        }
+
+        // Função para adicionar tarefa ao DOM
+        function addTaskToDOM(text, completed, dueDate) {
+            const ul = document.getElementById('task-list');
+            const li = document.createElement('li');
+            li.classList.toggle('completed', completed);
+            li.innerHTML = `
+                ${text} 
+                <span class="date">${dueDate ? 'Prazo: ' + dueDate : ''}</span>
+                <button onclick="toggleTask(this)">✓</button>
+                <button onclick="deleteTask(this)">✗</button>
+            `;
+            ul.appendChild(li);
+        }
+
+        // Salvar uma tarefa no Local Storage
+        function saveTask(text, completed, dueDate) {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push({ text, completed, dueDate });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Atualizar uma tarefa no Local Storage
+        function updateTask(index, completed) {
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks[index].completed = completed;
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Deletar uma tarefa do Local Storage
+        function deleteTaskFromStorage(index) {
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Função para marcar/desmarcar tarefa como concluída
+        function toggleTask(button) {
+            const li = button.parentElement;
+            li.classList.toggle('completed');
+
+            const taskText = li.innerText.replace('✓✗', '').trim();
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            const index = tasks.findIndex(task => task.text === taskText);
+
+            const isCompleted = li.classList.contains('completed');
+            updateTask(index, isCompleted);
+        }
+
+        // Função para deletar tarefa
+        function deleteTask(button) {
+            const li = button.parentElement;
+            const taskText = li.innerText.replace('✓✗', '').trim();
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            const index = tasks.findIndex(task => task.text === taskText);
+
+            deleteTaskFromStorage(index);
+            li.remove();
+        }
+
+        // Carregar as tarefas ao iniciar
+        window.onload = loadTasks;
+    </script>
+</body>
+</html>
